@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-require('dotenv').config();
+// require('dotenv').config(); // บรรทัดนี้ถูกลบไปแล้ว
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -10,8 +10,13 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// *** ฝัง API Key ของคุณตรงนี้ ***
+const YOUR_ACTUAL_GEMINI_API_KEY = "AIzaSyCbFSsUjmf5-0vjn6pN633vWbfraFSlawg"; // <--- เปลี่ยนตรงนี้เป็น API Key จริงของคุณ (อยู่ใน "...")
+const genAI = new GoogleGenerativeAI(YOUR_ACTUAL_GEMINI_API_KEY); // <--- แก้ไขตรงนี้
 
+const aiName = "swchat.kru";
+
+// ... ส่วนที่เหลือของโค้ดเหมือนเดิม ...
 const aiName = "swchat.kru";
 
 // *** เปลี่ยน Endpoint ตรงนี้จาก '/api/chat' เป็น '/chat' ***
