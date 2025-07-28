@@ -6,15 +6,18 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3001; // กำหนดพอร์ตจาก .env หรือใช้ 3001 เป็นค่าเริ่มต้น
+// Render.com จะกำหนด PORT ให้เองผ่าน process.env.PORT
+// หากรันบน Local จะใช้ PORT=3001 ตามที่กำหนดใน .env
+const port = process.env.PORT || 3001;
 
 // ใช้ CORS middleware เพื่ออนุญาตให้ Frontend เข้าถึงได้
+// หาก Deploy บน Render, Frontend และ Backend จะถือเป็นคนละ Origin กัน
 app.use(cors());
 
 // ใช้ express.json() สำหรับการ parse JSON body จาก request
 app.use(express.json());
 
-// เข้าถึง API Key จาก .env และเริ่มต้น Google Generative AI
+// เข้าถึง API Key จาก .env (สำหรับ Local) หรือจาก Environment Variables ของ Render
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // กำหนดชื่อ AI
@@ -47,7 +50,7 @@ app.post('/api/chat', async (req, res) => {
             // Error จาก Google API (เช่น API Key ไม่ถูกต้อง, เกินโควต้า)
             res.status(error.response.status).json({ error: error.response.data });
         } else {
-            // Error อื่นๆ
+            // Error อื่นๆ (เช่น Network error)
             res.status(500).json({ error: 'Something went wrong with the AI. Please check your API key or try again later.' });
         }
     }
