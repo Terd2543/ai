@@ -1,38 +1,60 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+// โหลดตัวแปรสภาพแวดล้อมจากไฟล์ .env
+require('dotenv').config();
+
 const app = express();
-const port = process.env.PORT || 3000;  // แนะนำให้ใช้ PORT จาก env
+const port = process.env.PORT || 3001; // กำหนดพอร์ตจาก .env หรือใช้ 3001 เป็นค่าเริ่มต้น
 
-// ใส่ API KEY จาก Google AI
-const genAI = new GoogleGenerativeAI("AIzaSyAeTJkCLKBKEvf_1dG4RIZyZxfWrawL1p4");
-
+// ใช้ CORS middleware เพื่ออนุญาตให้ Frontend เข้าถึงได้
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static('public'));
 
-app.get('/', (req, res) => {
-  res.send('Welcome to the AI Chat server! Use POST /chat to talk.');
+// ใช้ express.json() สำหรับการ parse JSON body จาก request
+app.use(express.json());
+
+// เข้าถึง API Key จาก .env และเริ่มต้น Google Generative AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// กำหนดชื่อ AI
+const aiName = "swchat.kru";
+
+// Endpoint สำหรับการสนทนากับ AI
+app.post('/api/chat', async (req, res) => {
+    const { message } = req.body;
+
+    if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+    }
+
+    try {
+        // เลือกโมเดล Gemini ที่ต้องการใช้ (gemini-pro เหมาะสำหรับข้อความ)
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+        // ส่งข้อความไปให้ AI และรอการตอบกลับ
+        const result = await model.generateContent(message);
+        const response = await result.response;
+        const aiResponseText = response.text(); // ดึงข้อความที่ AI ตอบกลับมา
+
+        // ส่งคำตอบของ AI กลับไปยัง Frontend พร้อมชื่อ AI
+        res.json({ reply: aiResponseText, aiName: aiName });
+
+    } catch (error) {
+        console.error('Error calling Google Gemini API:', error);
+        // จัดการ Error ที่อาจเกิดขึ้น
+        if (error.response) {
+            // Error จาก Google API (เช่น API Key ไม่ถูกต้อง, เกินโควต้า)
+            res.status(error.response.status).json({ error: error.response.data });
+        } else {
+            // Error อื่นๆ
+            res.status(500).json({ error: 'Something went wrong with the AI. Please check your API key or try again later.' });
+        }
+    }
 });
 
-app.post('/chat', async (req, res) => {
-  const userMessage = req.body.message;
-
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(userMessage);
-    const response = await result.response;
-    const text = response.text();
-
-    res.json({ reply: text });
-  } catch (error) {
-    console.error("Gemini error:", error);
-    res.status(500).json({ reply: "ขออภัย ระบบมีปัญหา 😢" });
-  }
-});
-
+// เริ่มต้น Server
 app.listen(port, () => {
-  console.log(`✅ Server running on port ${port}`);
+    console.log(`Server is running on port ${port}`);
+    console.log(`AI Name: ${aiName}`);
 });
