@@ -4,14 +4,18 @@ const bodyParser = require('body-parser');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;  // แนะนำให้ใช้ PORT จาก env
 
-// 🧠 ใส่ API KEY จาก Google AI
+// ใส่ API KEY จาก Google AI
 const genAI = new GoogleGenerativeAI("AIzaSyAeTJkCLKBKEvf_1dG4RIZyZxfWrawL1p4");
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  res.send('Welcome to the AI Chat server! Use POST /chat to talk.');
+});
 
 app.post('/chat', async (req, res) => {
   const userMessage = req.body.message;
@@ -30,5 +34,5 @@ app.post('/chat', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`✅ Server running on http://localhost:${port}`);
+  console.log(`✅ Server running on port ${port}`);
 });
